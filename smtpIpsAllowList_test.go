@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestSmtpCheckAllowlistReturnsTrueIfEmpty(t *testing.T) {
+func TestSmtpCheckAllowlistReturnsFalseIfEmpty(t *testing.T) {
 	makeDefaultAuthFile()
 	config := &contracts.AuthenticationConfig{}
 	config.Smtp.IpsAllowList.Enabled = true
@@ -14,8 +14,8 @@ func TestSmtpCheckAllowlistReturnsTrueIfEmpty(t *testing.T) {
 
 	(*gounit.T)(t).AssertTrue(auth.SMTP().IpsAllowList().Enabled())
 
-	(*gounit.T)(t).AssertTrue(auth.SMTP().IpsAllowList().Allowed("user1", "1.2.3.4"))
-	(*gounit.T)(t).AssertTrue(auth.SMTP().IpsAllowList().Allowed("user2", "1.2.3.4"))
+	(*gounit.T)(t).AssertFalse(auth.SMTP().IpsAllowList().Allowed("user1", "1.2.3.4"))
+	(*gounit.T)(t).AssertFalse(auth.SMTP().IpsAllowList().Allowed("user2", "1.2.3.4"))
 }
 
 func TestSmtpAddIp(t *testing.T) {
@@ -79,8 +79,8 @@ func TestSmtpClearAllIps(t *testing.T) {
 
 	(*gounit.T)(t).AssertNotError(auth.SMTP().IpsAllowList().ClearAllIps("user1"))
 
-	(*gounit.T)(t).AssertTrue(auth.SMTP().IpsAllowList().Allowed("user1", "1.1.1.1"))
-	(*gounit.T)(t).AssertTrue(auth.SMTP().IpsAllowList().Allowed("user1", "1.1.1.2"))
+	(*gounit.T)(t).AssertFalse(auth.SMTP().IpsAllowList().Allowed("user1", "1.1.1.1"))
+	(*gounit.T)(t).AssertFalse(auth.SMTP().IpsAllowList().Allowed("user1", "1.1.1.2"))
 
 	(*gounit.T)(t).AssertNotError(auth.SMTP().IpsAllowList().AddIp("user1", "1.1.1.2"))
 

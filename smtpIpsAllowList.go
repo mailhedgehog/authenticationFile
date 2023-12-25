@@ -23,11 +23,7 @@ func (allowlist *smtpIpsAllowList) Allowed(username string, ip string) bool {
 		return false
 	}
 
-	if len(user.smtpAllowListedIPs) > 0 {
-		return slices.Contains(user.smtpAllowListedIPs, ip)
-	}
-
-	return true
+	return slices.Contains(user.smtpAllowListedIPs, ip)
 }
 
 func (allowlist *smtpIpsAllowList) AddIp(username string, ip string) error {

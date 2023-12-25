@@ -12,7 +12,7 @@ import (
     "testing"
 )
 
-func TestToSMTPMail(t *testing.T) {
+func Test(t *testing.T) {
     config := &contracts.AuthenticationConfig{}
     config.Dashboard.ViaPasswordAuthentication.Enabled = true
     auth := CreateFileAuthentication(&StorageConfiguration{Path: filePath}, config)
