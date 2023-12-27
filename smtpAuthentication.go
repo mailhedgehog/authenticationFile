@@ -3,6 +3,7 @@ package authenticationFile
 import "github.com/mailhedgehog/contracts"
 
 type smtpAuthentication struct {
+	context *storageContext
 }
 
 func (authentication *smtpAuthentication) RequiresAuthentication() bool {
@@ -11,13 +12,13 @@ func (authentication *smtpAuthentication) RequiresAuthentication() bool {
 }
 
 func (authentication *smtpAuthentication) IpsAllowList() contracts.IpsAllowList {
-	return &smtpIpsAllowList{}
+	return &smtpIpsAllowList{authentication.context}
 }
 
 func (authentication *smtpAuthentication) ViaPasswordAuthentication() contracts.ViaPasswordAuthentication {
-	return &smtpViaPasswordAuthentication{}
+	return &smtpViaPasswordAuthentication{authentication.context}
 }
 
 func (authentication *smtpAuthentication) ViaIpAuthentication() contracts.ViaIpAuthentication {
-	return &smtpViaIpAuthentication{}
+	return &smtpViaIpAuthentication{authentication.context}
 }

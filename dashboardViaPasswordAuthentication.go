@@ -7,10 +7,11 @@ import (
 )
 
 type dashboardViaPasswordAuthentication struct {
+	context *storageContext
 }
 
 func (authentication *dashboardViaPasswordAuthentication) Enabled() bool {
-	return fileAuthentication.config.Dashboard.ViaPasswordAuthentication.Enabled
+	return authentication.context.config.Dashboard.ViaPasswordAuthentication.Enabled
 }
 
 func (authentication *dashboardViaPasswordAuthentication) Authenticate(username string, password string) bool {
@@ -18,7 +19,7 @@ func (authentication *dashboardViaPasswordAuthentication) Authenticate(username 
 		return true
 	}
 
-	user, ok := fileAuthentication.users[username]
+	user, ok := authentication.context.storage.users[username]
 	if !ok {
 		return false
 	}
@@ -35,7 +36,7 @@ func (authentication *dashboardViaPasswordAuthentication) SetPassword(username s
 		return errors.New("username required")
 	}
 
-	fileAuthentication.initUsers()
+	authentication.context.storage.initUsers()
 
 	var newPassHash []byte
 	if len(password) > 0 {
@@ -46,10 +47,10 @@ func (authentication *dashboardViaPasswordAuthentication) SetPassword(username s
 		}
 	}
 
-	fileAuthentication.users[username] = userInfo{
+	authentication.context.storage.users[username] = userInfo{
 		username:      username,
 		dashboardPass: string(newPassHash),
 	}
 
-	return fileAuthentication.writeToFile()
+	return authentication.context.storage.writeToFile()
 }

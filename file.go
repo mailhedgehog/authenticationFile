@@ -18,13 +18,16 @@ type StorageConfiguration struct {
 	Path string `yaml:"path"`
 }
 
-var fileAuthentication *FileAuthentication
-
 func CreateFileAuthentication(storageConfiguration *StorageConfiguration, config *contracts.AuthenticationConfig) *FileAuthentication {
-	fileAuthentication = &FileAuthentication{
-		filePath: storageConfiguration.Path,
-		config:   config,
-	}
-	fileAuthentication.authFile()
-	return fileAuthentication
+	storage := &FileAuthentication{
+		context: &storageContext{
+			filePath: storageConfiguration.Path,
+			config:   config,
+		}}
+
+	storage.context.storage = storage
+
+	storage.authFile()
+
+	return storage
 }

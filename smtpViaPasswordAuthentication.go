@@ -6,10 +6,12 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-type smtpViaPasswordAuthentication struct{}
+type smtpViaPasswordAuthentication struct {
+	context *storageContext
+}
 
 func (authentication *smtpViaPasswordAuthentication) Enabled() bool {
-	return fileAuthentication.config.Smtp.ViaPasswordAuthentication.Enabled
+	return authentication.context.config.Smtp.ViaPasswordAuthentication.Enabled
 }
 
 func (authentication *smtpViaPasswordAuthentication) Authenticate(username string, password string) bool {
@@ -17,7 +19,7 @@ func (authentication *smtpViaPasswordAuthentication) Authenticate(username strin
 		return true
 	}
 
-	user, ok := fileAuthentication.users[username]
+	user, ok := authentication.context.storage.users[username]
 	if !ok {
 		return false
 	}
@@ -34,7 +36,7 @@ func (authentication *smtpViaPasswordAuthentication) SetPassword(username string
 		return errors.New("username required")
 	}
 
-	fileAuthentication.initUsers()
+	authentication.context.storage.initUsers()
 
 	var newPassHash []byte
 	if len(password) > 0 {
@@ -45,10 +47,10 @@ func (authentication *smtpViaPasswordAuthentication) SetPassword(username string
 		}
 	}
 
-	fileAuthentication.users[username] = userInfo{
+	authentication.context.storage.users[username] = userInfo{
 		username: username,
 		smtpPass: string(newPassHash),
 	}
 
-	return fileAuthentication.writeToFile()
+	return authentication.context.storage.writeToFile()
 }

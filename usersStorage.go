@@ -6,10 +6,12 @@ import (
 	"strings"
 )
 
-type usersStorage struct{}
+type usersStorage struct {
+	context *storageContext
+}
 
 func (storage *usersStorage) Exists(username string) bool {
-	_, ok := fileAuthentication.users[username]
+	_, ok := storage.context.storage.users[username]
 
 	return ok
 }
@@ -19,24 +21,24 @@ func (storage *usersStorage) Add(username string) error {
 		return errors.New("username and httpPassHash required")
 	}
 
-	fileAuthentication.initUsers()
+	storage.context.storage.initUsers()
 
-	fileAuthentication.users[username] = userInfo{
+	storage.context.storage.users[username] = userInfo{
 		username: username,
 	}
 
-	return fileAuthentication.writeToFile()
+	return storage.context.storage.writeToFile()
 }
 
 func (storage *usersStorage) Delete(username string) error {
-	delete(fileAuthentication.users, username)
+	delete(storage.context.storage.users, username)
 
-	return fileAuthentication.writeToFile()
+	return storage.context.storage.writeToFile()
 }
 
 func (storage *usersStorage) List(searchQuery string, offset, limit int) ([]contracts.UserResource, int, error) {
-	keys := make([]string, 0, len(fileAuthentication.users))
-	for k, _ := range fileAuthentication.users {
+	keys := make([]string, 0, len(storage.context.storage.users))
+	for k, _ := range storage.context.storage.users {
 		if len(searchQuery) > 0 {
 			if strings.Contains(k, searchQuery) {
 				keys = append(keys, k)
@@ -56,7 +58,7 @@ func (storage *usersStorage) List(searchQuery string, offset, limit int) ([]cont
 	slice := keys[offset:endIndex]
 	var resources []contracts.UserResource
 	for _, username := range slice {
-		user, ok := fileAuthentication.users[username]
+		user, ok := storage.context.storage.users[username]
 		if !ok {
 			continue
 		}

@@ -7,10 +7,11 @@ import (
 )
 
 type smtpIpsAllowList struct {
+	context *storageContext
 }
 
 func (allowlist *smtpIpsAllowList) Enabled() bool {
-	return fileAuthentication.config.Smtp.IpsAllowList.Enabled
+	return allowlist.context.config.Smtp.IpsAllowList.Enabled
 }
 
 func (allowlist *smtpIpsAllowList) Allowed(username string, ip string) bool {
@@ -18,7 +19,7 @@ func (allowlist *smtpIpsAllowList) Allowed(username string, ip string) bool {
 		return true
 	}
 
-	user, ok := fileAuthentication.users[username]
+	user, ok := allowlist.context.storage.users[username]
 	if !ok {
 		return false
 	}
@@ -31,7 +32,7 @@ func (allowlist *smtpIpsAllowList) AddIp(username string, ip string) error {
 		return errors.New("username and ip required")
 	}
 
-	user, ok := fileAuthentication.users[username]
+	user, ok := allowlist.context.storage.users[username]
 	if !ok {
 		return errors.New(fmt.Sprintf(
 			"User with such username [%s] not found.",
@@ -44,9 +45,9 @@ func (allowlist *smtpIpsAllowList) AddIp(username string, ip string) error {
 	}
 
 	user.smtpAllowListedIPs = append(user.smtpAllowListedIPs, ip)
-	fileAuthentication.users[username] = user
+	allowlist.context.storage.users[username] = user
 
-	return fileAuthentication.writeToFile()
+	return allowlist.context.storage.writeToFile()
 }
 
 func (allowlist *smtpIpsAllowList) DeleteIp(username string, ip string) error {
@@ -54,7 +55,7 @@ func (allowlist *smtpIpsAllowList) DeleteIp(username string, ip string) error {
 		return errors.New("username and ip required")
 	}
 
-	user, ok := fileAuthentication.users[username]
+	user, ok := allowlist.context.storage.users[username]
 	if !ok {
 		return errors.New(fmt.Sprintf(
 			"User with such username [%s] not found.",
@@ -65,10 +66,10 @@ func (allowlist *smtpIpsAllowList) DeleteIp(username string, ip string) error {
 	if slices.Contains(user.smtpAllowListedIPs, ip) {
 		i := slices.Index(user.smtpAllowListedIPs, ip)
 		user.smtpAllowListedIPs = slices.Delete(user.smtpAllowListedIPs, i, i+1)
-		fileAuthentication.users[username] = user
+		allowlist.context.storage.users[username] = user
 	}
 
-	return fileAuthentication.writeToFile()
+	return allowlist.context.storage.writeToFile()
 }
 
 func (allowlist *smtpIpsAllowList) ClearAllIps(username string) error {
@@ -76,7 +77,7 @@ func (allowlist *smtpIpsAllowList) ClearAllIps(username string) error {
 		return errors.New("username required")
 	}
 
-	user, ok := fileAuthentication.users[username]
+	user, ok := allowlist.context.storage.users[username]
 	if !ok {
 		return errors.New(fmt.Sprintf(
 			"User with such username [%s] not found.",
@@ -85,7 +86,7 @@ func (allowlist *smtpIpsAllowList) ClearAllIps(username string) error {
 	}
 
 	user.smtpAllowListedIPs = []string{}
-	fileAuthentication.users[username] = user
+	allowlist.context.storage.users[username] = user
 
-	return fileAuthentication.writeToFile()
+	return allowlist.context.storage.writeToFile()
 }

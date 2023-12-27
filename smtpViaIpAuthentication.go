@@ -7,10 +7,11 @@ import (
 )
 
 type smtpViaIpAuthentication struct {
+	context *storageContext
 }
 
 func (authentication *smtpViaIpAuthentication) Enabled() bool {
-	return fileAuthentication.config.Smtp.ViaIpAuthentication.Enabled
+	return authentication.context.config.Smtp.ViaIpAuthentication.Enabled
 }
 
 func (authentication *smtpViaIpAuthentication) Authenticate(username string, ip string) bool {
@@ -18,7 +19,7 @@ func (authentication *smtpViaIpAuthentication) Authenticate(username string, ip 
 		return true
 	}
 
-	user, ok := fileAuthentication.users[username]
+	user, ok := authentication.context.storage.users[username]
 	if !ok {
 		return false
 	}
@@ -31,7 +32,7 @@ func (authentication *smtpViaIpAuthentication) AddIp(username string, ip string)
 		return errors.New("username and ip required")
 	}
 
-	user, ok := fileAuthentication.users[username]
+	user, ok := authentication.context.storage.users[username]
 	if !ok {
 		return errors.New(fmt.Sprintf(
 			"User with such username [%s] not found.",
@@ -44,9 +45,9 @@ func (authentication *smtpViaIpAuthentication) AddIp(username string, ip string)
 	}
 
 	user.smtpAuthIPs = append(user.smtpAuthIPs, ip)
-	fileAuthentication.users[username] = user
+	authentication.context.storage.users[username] = user
 
-	return fileAuthentication.writeToFile()
+	return authentication.context.storage.writeToFile()
 }
 
 func (authentication *smtpViaIpAuthentication) DeleteIp(username string, ip string) error {
@@ -54,7 +55,7 @@ func (authentication *smtpViaIpAuthentication) DeleteIp(username string, ip stri
 		return errors.New("username and ip required")
 	}
 
-	user, ok := fileAuthentication.users[username]
+	user, ok := authentication.context.storage.users[username]
 	if !ok {
 		return errors.New(fmt.Sprintf(
 			"User with such username [%s] not found.",
@@ -65,10 +66,10 @@ func (authentication *smtpViaIpAuthentication) DeleteIp(username string, ip stri
 	if slices.Contains(user.smtpAuthIPs, ip) {
 		i := slices.Index(user.smtpAuthIPs, ip)
 		user.smtpAuthIPs = slices.Delete(user.smtpAuthIPs, i, i+1)
-		fileAuthentication.users[username] = user
+		authentication.context.storage.users[username] = user
 	}
 
-	return fileAuthentication.writeToFile()
+	return authentication.context.storage.writeToFile()
 }
 
 func (authentication *smtpViaIpAuthentication) ClearAllIps(username string) error {
@@ -76,7 +77,7 @@ func (authentication *smtpViaIpAuthentication) ClearAllIps(username string) erro
 		return errors.New("username required")
 	}
 
-	user, ok := fileAuthentication.users[username]
+	user, ok := authentication.context.storage.users[username]
 	if !ok {
 		return errors.New(fmt.Sprintf(
 			"User with such username [%s] not found.",
@@ -85,7 +86,7 @@ func (authentication *smtpViaIpAuthentication) ClearAllIps(username string) erro
 	}
 
 	user.smtpAuthIPs = []string{}
-	fileAuthentication.users[username] = user
+	authentication.context.storage.users[username] = user
 
-	return fileAuthentication.writeToFile()
+	return authentication.context.storage.writeToFile()
 }

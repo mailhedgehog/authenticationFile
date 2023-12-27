@@ -7,10 +7,11 @@ import (
 )
 
 type dashboardViaEmailAuthentication struct {
+	context *storageContext
 }
 
 func (authentication *dashboardViaEmailAuthentication) Enabled() bool {
-	return fileAuthentication.config.Dashboard.ViaEmailAuthentication.Enabled
+	return authentication.context.config.Dashboard.ViaEmailAuthentication.Enabled
 }
 
 func (authentication *dashboardViaEmailAuthentication) SendToken(username string, email string) error {
@@ -26,7 +27,7 @@ func (authentication *dashboardViaEmailAuthentication) AddEmail(username string,
 		return errors.New("username and email required")
 	}
 
-	user, ok := fileAuthentication.users[username]
+	user, ok := authentication.context.storage.users[username]
 	if !ok {
 		return errors.New(fmt.Sprintf(
 			"User with such username [%s] not found.",
@@ -39,9 +40,9 @@ func (authentication *dashboardViaEmailAuthentication) AddEmail(username string,
 	}
 
 	user.dashboardAuthEmails = append(user.dashboardAuthEmails, email)
-	fileAuthentication.users[username] = user
+	authentication.context.storage.users[username] = user
 
-	return fileAuthentication.writeToFile()
+	return authentication.context.storage.writeToFile()
 }
 
 func (authentication *dashboardViaEmailAuthentication) DeleteEmail(username string, email string) error {
@@ -49,7 +50,7 @@ func (authentication *dashboardViaEmailAuthentication) DeleteEmail(username stri
 		return errors.New("username and email required")
 	}
 
-	user, ok := fileAuthentication.users[username]
+	user, ok := authentication.context.storage.users[username]
 	if !ok {
 		return errors.New(fmt.Sprintf(
 			"User with such username [%s] not found.",
@@ -60,10 +61,10 @@ func (authentication *dashboardViaEmailAuthentication) DeleteEmail(username stri
 	if slices.Contains(user.dashboardAuthEmails, email) {
 		i := slices.Index(user.dashboardAuthEmails, email)
 		user.dashboardAuthEmails = slices.Delete(user.dashboardAuthEmails, i, i+1)
-		fileAuthentication.users[username] = user
+		authentication.context.storage.users[username] = user
 	}
 
-	return fileAuthentication.writeToFile()
+	return authentication.context.storage.writeToFile()
 }
 
 func (authentication *dashboardViaEmailAuthentication) ClearAllEmails(username string) error {
@@ -71,7 +72,7 @@ func (authentication *dashboardViaEmailAuthentication) ClearAllEmails(username s
 		return errors.New("username required")
 	}
 
-	user, ok := fileAuthentication.users[username]
+	user, ok := authentication.context.storage.users[username]
 	if !ok {
 		return errors.New(fmt.Sprintf(
 			"User with such username [%s] not found.",
@@ -80,7 +81,7 @@ func (authentication *dashboardViaEmailAuthentication) ClearAllEmails(username s
 	}
 
 	user.dashboardAuthEmails = []string{}
-	fileAuthentication.users[username] = user
+	authentication.context.storage.users[username] = user
 
-	return fileAuthentication.writeToFile()
+	return authentication.context.storage.writeToFile()
 }

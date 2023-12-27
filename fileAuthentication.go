@@ -19,23 +19,28 @@ type userInfo struct {
 	dashboardAuthEmails []string
 }
 
-// FileAuthentication represents the authentication handler using file
-type FileAuthentication struct {
+type storageContext struct {
 	filePath string
 	config   *contracts.AuthenticationConfig
-	users    map[string]userInfo
+	storage  *FileAuthentication
+}
+
+// FileAuthentication represents the authentication handler using file
+type FileAuthentication struct {
+	context *storageContext
+	users   map[string]userInfo
 }
 
 // authFile scan file and add users to memory
 func (fileAuth *FileAuthentication) authFile() int {
 	fileAuth.users = nil
 
-	if len(fileAuth.filePath) <= 0 {
+	if len(fileAuth.context.filePath) <= 0 {
 		logManager().Debug("File auth empty.")
 		return 0
 	}
 
-	file, err := os.Open(fileAuth.filePath)
+	file, err := os.Open(fileAuth.context.filePath)
 	logger.PanicIfError(err)
 	defer file.Close()
 
@@ -107,7 +112,7 @@ func (fileAuth *FileAuthentication) addUserFromFileLine(line string) error {
 }
 
 func (fileAuth *FileAuthentication) writeToFile() error {
-	file, err := os.OpenFile(fileAuth.filePath, os.O_APPEND|os.O_WRONLY, os.ModeAppend)
+	file, err := os.OpenFile(fileAuth.context.filePath, os.O_APPEND|os.O_WRONLY, os.ModeAppend)
 	if err != nil {
 		return err
 	}
@@ -143,11 +148,11 @@ func (fileAuth *FileAuthentication) initUsers() {
 }
 
 func (fileAuth *FileAuthentication) SMTP() contracts.SmtpAuthentication {
-	return &smtpAuthentication{}
+	return &smtpAuthentication{fileAuth.context}
 }
 func (fileAuth *FileAuthentication) Dashboard() contracts.DashboardAuthentication {
-	return &dashboardAuthentication{}
+	return &dashboardAuthentication{fileAuth.context}
 }
 func (fileAuth *FileAuthentication) UsersStorage() contracts.UsersStorage {
-	return &usersStorage{}
+	return &usersStorage{fileAuth.context}
 }
